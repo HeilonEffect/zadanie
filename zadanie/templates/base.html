@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+	<head>
+		<meta charset="utf-8">
+		<title>Main Page</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.min.js"></script>
+		<script src="/static/ng-quick-date.min.js"></script>
+		<link rel="stylesheet" href="/static/ng-quick-date.css">
+		<script>
+			var myApp = angular.module('myApp', ["ngQuickDate"]);
+
+			myApp.config(function ($interpolateProvider) {
+				$interpolateProvider.startSymbol('{[{');
+				$interpolateProvider.endSymbol('}]}');
+			});
+
+			myApp.controller('myCtrl', function ($scope, $http) {
+				$http.get('/tablenames').success(function (data) {
+					$scope.tablenames = data;
+				});
+				$scope.current_table = '';
+				$scope.result = {};
+				
+				$scope.get_table = function (elem) {
+					$scope.current_table = elem.value;
+					$http.get('/' + elem.value).success(function (data) {
+						$scope.content = data;
+						$scope.values = data['columns'];
+					});
+					$scope.result = {};
+				}
+				$scope.add_value = function (elem) {
+					console.log($scope.result);
+					var data = "";
+					for (var key in $scope.result)
+						data += key + "=" + $scope.result[key] + "&";
+					data = data.slice(0, data.length - 1);
+					$http({
+						method: "POST",
+						url: "/add/" + $scope.current_table,
+						data: data,
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded"
+						}
+					}).success(function (data, status, headers, config) {
+						$scope.content['data'].push($scope.result);
+					});
+				}
+				$scope.change_value = function (index, value) {
+					if (value['type'] == 'date')
+						$scope.result[value['id']] = ('' + value['result']).slice(4, 15);
+					else
+						$scope.result[value['id']] = value['result'];
+				}
+			});
+		</script>
+	</head>
+	<body ng-controller="myCtrl">
+		<div style="width: 80%;float:right;margin-top:0">
+			<table style="width: 100%;">
+				<thead>
+					<tr>
+						<td ng-repeat="column in content['columns']" style="border: 1px solid black">
+							{[{column['title']}]}
+						</td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="row in content['data']">
+						<td ng-repeat="column in row">{[{column}]}</td>
+					</tr>
+				</tbody>
+			</table>
+			<form ng-submit="add_value(this)" style="border: 1px solid black" ng-show="content">
+				<p ng-repeat="column in content['columns']" ng-model="values">
+					<label>{[{column['title']}]}</label>
+					<input ng-type="{[{column['type']}]}" type="{[{column['type']}]}" ng-model="column.result" ng-change="change_value($index, column)" ng-if="column['type']!='date'">
+				<quick-datepicker ng-model='column.result' disable-timepicker='true' ng-if="column['type']=='date'" ng-change="change_value($index, column)" date-format="MM/dd/yyyy"></quick-datepicker>
+
+				</p>
+				<input type="submit" value="Submit">
+			</form>
+		</div>
+		<ul style="float:left">
+			<li ng-repeat="value in tablenames"><a href="#" ng-click="get_table(this)">{[{value}]}</a></li>
+		</ul>
+	</body>
+</html>
