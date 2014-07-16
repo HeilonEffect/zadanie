@@ -1,31 +1,34 @@
-<users>
-	<title>Пользователи</title>
-	<fields>
-		<id>name</id>
-		<title>Имя</title>
-		<type>char</type>
-	</fields>
-	<fields>
-		<id>paycheck</id>
-		<title>Зарплата</title>
-		<type>int</type>
-	</fields>
-	<fields>
-		<id>date_joined</id>
-		<title>Дата поступления на работу</title>
-		<type>date</type>
-	</fields>
-</users>
-<rooms>
-	<title>Комнаты</title>
-	<fields>
-		<id>department</id>
-		<title>Отдел</title>
-		<type>char</type>
-	</fields>
-	<fields>
-		<id>spots</id>
-		<title>Вместимость</title>
-		<type>int</type>
-	</fields>
-</rooms>
+<?xml version="1.0" encoding="UTF-8" ?>
+<root>
+    <users>
+        <title>Пользователи</title>
+        <fields>
+            <id>name</id>
+            <title>Имя</title>
+            <type>char</type>
+        </fields>
+        <fields>
+            <id>paycheck</id>
+            <title>Зарплата</title>
+            <type>int</type>
+        </fields>
+        <fields>
+            <id>date_joined</id>
+            <title>Дата поступления на работу</title>
+            <type>date</type>
+        </fields>
+    </users>
+    <rooms>
+        <title>Комнаты</title>
+        <fields>
+            <id>department</id>
+            <title>Отдел</title>
+            <type>char</type>
+        </fields>
+        <fields>
+            <id>spots</id>
+            <title>Вместимость</title>
+            <type>int</type>
+        </fields>
+    </rooms>
+</root>
