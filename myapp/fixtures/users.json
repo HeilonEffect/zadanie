@@ -1,0 +1,1 @@
+[{"model": "myapp.users", "fields": {"name": "ds", "paycheck": 1, "date_joined": "2014-07-03"}, "pk": 1}, {"model": "myapp.users", "fields": {"name": "fsdfsd", "paycheck": 3, "date_joined": "2014-06-30"}, "pk": 2}]

@@ -1,0 +1,1 @@
+[{"model": "myapp.rooms", "pk": 1, "fields": {"department": "dasda", "spots": 5}}, {"model": "myapp.rooms", "pk": 2, "fields": {"department": "dasdaqew", "spots": 3}}, {"model": "myapp.rooms", "pk": 3, "fields": {"department": "fsddsf", "spots": 2}}, {"model": "myapp.rooms", "pk": 4, "fields": {"department": "dasdads", "spots": 8}}]

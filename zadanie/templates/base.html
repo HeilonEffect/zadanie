@@ -26,15 +26,19 @@
 					$http.get('/' + elem.value).success(function (data) {
 						$scope.content = data;
 						$scope.values = data['columns'];
+						$scope.rows = data['data'].map(function (elem) {
+							return false;
+						});
 					});
 					$scope.result = {};
 				}
 				$scope.add_value = function (elem) {
-					console.log($scope.result);
 					var data = "";
 					for (var key in $scope.result)
 						data += key + "=" + $scope.result[key] + "&";
 					data = data.slice(0, data.length - 1);
+					console.log(data);
+
 					$http({
 						method: "POST",
 						url: "/add/" + $scope.current_table,
@@ -46,11 +50,29 @@
 						$scope.content['data'].push($scope.result);
 					});
 				}
+				// фиксирует все изменения в форме добавления элементов
 				$scope.change_value = function (index, value) {
 					if (value['type'] == 'date')
 						$scope.result[value['id']] = ('' + value['result']).slice(4, 15);
 					else
 						$scope.result[value['id']] = value['result'];
+				}
+				$scope.old_row = {};	// Значение до редактирования
+				
+				$scope.edit_cel = function (index, value, row) {
+					for (var i in $scope.content['data']) {
+						var flag = true;
+						for (var key in row)
+							if (row[key] != $scope.content['data'][i][key]) {
+								flag = false;
+								break;
+							}
+						if (flag) {
+							// Если это нужное нам значение, то отсылаем старое и новое значения
+							$scope.old_row = $scope.content['data'][i];
+							console.log($scope.old_row);
+						}
+					}
 				}
 			});
 		</script>
@@ -67,7 +89,7 @@
 				</thead>
 				<tbody>
 					<tr ng-repeat="row in content['data']">
-						<td ng-repeat="column in row">{[{column}]}</td>
+						<td ng-repeat="column in row" ng-click="edit_cel($index, column, row)">{[{column}]}</td>
 					</tr>
 				</tbody>
 			</table>
