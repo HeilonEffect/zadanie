@@ -1,24 +1,30 @@
+import datetime
 import json
+import re
 
 from django.http import HttpResponse, HttpResponseNotFound
 from django.http import HttpResponseServerError
 from django.shortcuts import render_to_response
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from myapp.models import tables, sources
 from myapp.forms import myforms
 
 
+@require_http_methods(['GET'])
 def index(request):
     return render_to_response('base.html')
 
 
+@require_http_methods(['GET'])
 def tablenames(request):
     names = json.dumps([sources[item]['title'] for item in sources],
                        ensure_ascii=False)
     return HttpResponse(names, content_type='application/json')
 
 
+@require_http_methods(['GET'])
 def table_columns(request, table):
     convert = {'int': 'number', 'char': 'text', 'date': 'date',
                'number': 'number', 'text': 'text'}
@@ -49,6 +55,7 @@ def table_columns(request, table):
 
 
 @csrf_exempt
+@require_http_methods(['POST'])
 def add_value(request, table):
     for key in sources:
         if sources[key]['title'] == table:
@@ -63,9 +70,43 @@ def add_value(request, table):
                 return HttpResponseServerError()
 
 @csrf_exempt
-def edit_value(request, tables):
+@require_http_methods(['POST'])
+def edit_value(request, table):
+    '''
+    Обновляет отредактированную ячейку
+    Здесь идея заключается в следующем - мы получаем данные,
+    сериализованные в JSON - по ключу old - все данные старой
+    ячейки, по ключу new_val - то, что изменилось.
+    Дополняем новые данные теми старыми значениями, которые не изменились
+    После валидации, если '''
     try:
+        old_val = json.loads(request.POST['old'])
+        new_val = json.loads(request.POST['new_val'])
+
+        for key in new_val:
+            try:
+                new_val[key] = re.search(
+                    r'(\d+-\d+-\d+)', new_val[key]).group(1)
+            except Exception as e:
+                pass
+        for key in old_val:
+            if not key in new_val:
+                new_val[key] = old_val[key]
+
+        for key in sources:
+            if sources[key]['title'] == table:
+                form = myforms['%sForm' % key](old_val)
+                form1 = myforms['%sForm' % key](new_val)
+                if form.is_valid() and form1.is_valid():
+                    cd = form.cleaned_data
+                    cd1 = form1.cleaned_data
+
+                    tables[key].objects.filter(**cd).update(**cd1)
+                    return HttpResponse()
+                else:
+                    return HttpResponse()
+                    # print('invalid')
         return HttpResponse()
     except Exception as e:
         print(e)
-        return HttpResponse()
+        return HttpResponseServerError()

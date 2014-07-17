@@ -31,13 +31,13 @@
 						});
 					});
 					$scope.result = {};
+					$scope.hide_vals = [];
 				}
 				$scope.add_value = function (elem) {
 					var data = "";
 					for (var key in $scope.result)
 						data += key + "=" + $scope.result[key] + "&";
 					data = data.slice(0, data.length - 1);
-					console.log(data);
 
 					$http({
 						method: "POST",
@@ -58,8 +58,10 @@
 						$scope.result[value['id']] = value['result'];
 				}
 				$scope.old_row = {};	// Значение до редактирования
+				$scope.hide_vals;
 				
-				$scope.edit_cel = function (index, value, row) {
+				$scope.edit_cel = function (index, value, row, elem) {
+					$scope.form_type = $scope.content['columns'][index]['type'];
 					for (var i in $scope.content['data']) {
 						var flag = true;
 						for (var key in row)
@@ -70,9 +72,38 @@
 						if (flag) {
 							// Если это нужное нам значение, то отсылаем старое и новое значения
 							$scope.old_row = $scope.content['data'][i];
-							console.log($scope.old_row);
+							$scope.hide_vals = elem.$id;
+							break;
 						}
 					}
+				}
+				$scope.put_value = function (elem, index, row) {
+					console.log(elem);
+					// отправляет новое значение на сервер в формате
+					// {old: row, new_val: {field: val}}
+					var field = $scope.content['columns'][index]['id'];	// имя обновляемого поля
+					var data = {};
+					data["old"] = {};
+					for (var i in $scope.values) {
+						data["old"][$scope.values[i]["id"]] = row[i];
+					}
+					data["new_val"] = {};
+					data["new_val"][field] = $scope.new_value;
+
+					var data = "old=" + JSON.stringify(data['old']) + "&new_val=" + JSON.stringify(data['new_val']);
+					// Тут желателен PUT, но непонятно, как его извлечь в django
+					$http({
+						method: "POST",
+						url: "/put/" + $scope.current_table,
+						data: data,
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded"
+						}
+					});
+					$scope.hide_vals = '';
+				}
+				$scope.change_put = function (index, value, elem) {
+					$scope.new_value = elem.column;
 				}
 			});
 		</script>
@@ -89,7 +120,14 @@
 				</thead>
 				<tbody>
 					<tr ng-repeat="row in content['data']">
-						<td ng-repeat="column in row" ng-click="edit_cel($index, column, row)">{[{column}]}</td>
+						<td ng-repeat="column in row" ng-click="edit_cel($index, column, row, this)" style="border: 1px solid black">
+							<span ng-if="hide_vals != $id">{[{column}]}</span>
+							<form ng-if="hide_vals == $id" ng-submit="put_value(this, $index, row)">
+								<input type="{[{form_type}]}" ng-model="column" ng-if="form_type != 'date'" ng-change="change_put($index, column, this)">
+								<quick-datepicker ng-model="column" ng-if="form_type == 'date'" ng-change="change_put($index, column, this)"></quick-datepicker>
+								<input type="submit" value="submit">
+							</form>
+						</td>
 					</tr>
 				</tbody>
 			</table>

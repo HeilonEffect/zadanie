@@ -11,4 +11,5 @@ urlpatterns = patterns('',
     url(r'^tablenames$', tablenames),
     url(r'^(?P<table>\w+)$', table_columns),
     url(r'^add/(?P<table>\w+)$', add_value),
+    url(r'^put/(?P<table>\w+)$', edit_value),
 )

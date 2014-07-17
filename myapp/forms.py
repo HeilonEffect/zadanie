@@ -13,7 +13,7 @@ for item in sources:
             attrs[field['id']] = forms.IntegerField()
         elif field['type'] == 'date':
             attrs[field['id']] = forms.DateField(
-                input_formats=['%m/%d/%Y', '%b %d %Y'])
+                input_formats=['%m/%d/%Y', '%b %d %Y', '%Y-%m-%d'])
         elif field['type'] == 'char':
             attrs[field['id']] = forms.CharField()
 

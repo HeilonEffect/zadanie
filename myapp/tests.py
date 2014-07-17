@@ -1,4 +1,6 @@
 import json
+import random
+import re
 
 from django.test import TestCase
 from django.test.client import Client
@@ -55,3 +57,35 @@ class MainPageTest(TestCase):
             response = self.client.post(
                 '/add/%s' % sources[table]['title'], {})
             self.assertEqual(response.status_code, 500)
+
+    def test_edit_value(self):
+        for table in tables:
+            vals = tables[table].objects.values()
+            old = vals[0]
+            key = random.choice([key for key in old.keys()])
+            new_val = random.choice(tables[table].objects.values(key))
+
+            for key in old:
+                old[key] = str(old[key])
+            for key in new_val:
+                new_val[key] = str(new_val[key])
+
+            response = self.client.post('/put/%s' % sources[table]['title'],
+                                        {'old': json.dumps(old),
+                                         'new_val': json.dumps(new_val)})
+            self.assertEqual(response.status_code, 200)
+
+            for key in old:
+                if isinstance(old[key], int):
+                    for k in new_val:
+                        new_val[k] = 'qwerty'
+
+            response = self.client.post('/put/%s' % sources[table]['title'],
+                                        {'old': json.dumps(old),
+                                         'new_val': json.dumps(new_val)})
+            self.assertEqual(response.status_code, 200)
+
+            response = self.client.post('/put/%s' % sources[table]['title'], {})
+            self.assertEqual(response.status_code, 500)
+
+            # response = self.client.post
