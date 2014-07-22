@@ -52,9 +52,12 @@
 						}
 					}).success(function (data, status, headers, config) {
 						var tmp = [];
+						// упорядочиваем данные в нужном нам порядке
 						for (var i in $scope.content['columns'])
 							tmp.push(data[$scope.content['columns'][i].id]);
 						$scope.content['data'].push(tmp);
+					}).error(function (data, status, headers, config) {
+						alert('Заполните поле(я) ' + data);
 					});
 				}
 				// фиксирует все изменения в форме добавления элементов
@@ -65,7 +68,7 @@
 						$scope.result[value['id']] = value['result'];
 				}
 				$scope.old_row = {};	// Значение до редактирования
-				$scope.hide_vals;
+				$scope.hide_vals;		// ячейка, которую мы скрываем на время редактирования
 				
 				$scope.edit_cel = function (index, value, row, elem) {
 					$scope.form_type = $scope.content['columns'][index]['type'];
@@ -85,7 +88,6 @@
 					}
 				}
 				$scope.put_value = function (elem, index, row) {
-					console.log(elem);
 					// отправляет новое значение на сервер в формате
 					// {old: row, new_val: {field: val}}
 					var field = $scope.content['columns'][index]['id'];	// имя обновляемого поля
@@ -106,6 +108,8 @@
 						headers: {
 							"Content-Type": "application/x-www-form-urlencoded"
 						}
+					}).success(function (data, status, headers, config) {
+						$scope.content = data;
 					});
 					$scope.hide_vals = '';
 				}
@@ -126,9 +130,10 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat="row in content['data']">
+					<tr ng-repeat="row in content['data'] track by $index">
 						<td ng-repeat="column in row" ng-click="edit_cel($index, column, row, this)" style="border: 1px solid black">
 							<span ng-if="hide_vals != $id">{[{column}]}</span>
+							<!-- Форма редактирования элементов -->
 							<form ng-if="hide_vals == $id" ng-submit="put_value(this, $index, row)">
 								<input type="{[{form_type}]}" ng-model="column" ng-if="form_type != 'date'" ng-change="change_put($index, column, this)">
 								<quick-datepicker ng-model="column" ng-if="form_type == 'date'" ng-change="change_put($index, column, this)"></quick-datepicker>
@@ -144,7 +149,7 @@
 					<label>{[{column['title']}]}</label>
 					<input ng-type="{[{column['type']}]}" type="{[{column['type']}]}" ng-model="column.result" ng-change="change_value($index, column)" ng-if="column['type']!='date'" required>
 				
-				<quick-datepicker ng-model='column.result' disable-timepicker='true' ng-if="column['type']=='date'" ng-change="change_value($index, column)" date-format="MM/dd/yyyy" required></quick-datepicker>
+				<quick-datepicker ng-model='column.result' disable-timepicker='true' ng-if="column['type']=='date'" ng-change="change_value($index, column)" date-format="MM/dd/yyyy" required="true"></quick-datepicker>
 				</p>
 				<input type="submit" value="Submit">
 				<!-- yyyy-mm-dd -->

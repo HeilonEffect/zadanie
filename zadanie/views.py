@@ -24,33 +24,36 @@ def tablenames(request):
     return HttpResponse(names, content_type='application/json')
 
 
-@require_http_methods(['GET'])
-def table_columns(request, table):
+def get_table(fields, table):
     convert = {'int': 'number', 'char': 'text', 'date': 'date',
                'number': 'number', 'text': 'text'}
+    result = {}
+    result['columns'] = fields
+    for column in result['columns']:
+        column['type'] = convert[column['type']]
+        column['result'] = ''
+    kwargs = [field['id'] for field in fields]
+    result['data'] = list(table.objects.values(*kwargs)) or list()
+
+    tmp = []
+    for item in result['data']:
+        for key in item:
+            if str(item[key]).find('datetime'):
+                item[key] = str(item[key])
+        columns = [item['id'] for item in result['columns']]
+        tmp.append([item[column] for column in columns])
+    result['data'] = tmp
+
+    return json.dumps(result, ensure_ascii=False)
+
+
+@require_http_methods(['GET'])
+def table_columns(request, table):
     for key in sources:
         if sources[key]['title'] == table:
-            src = sources[key]['fields']
-
-            result = {}
-            result['columns'] = src
-            for column in result['columns']:
-                column['type'] = convert[column['type']]
-                column['result'] = ''
-            kwargs = [item['id'] for item in sources[key]['fields']]
-            result['data'] = list(tables[key].objects.values(*kwargs)) or list()
-
-            tmp = []
-            for item in result['data']:
-                for key in item:
-                    if str(item[key]).find('datetime'):
-                        item[key] = str(item[key])
-                columns = [item['id'] for item in result['columns']]
-                tmp.append([item[column] for column in columns]) #!!
-            result['data'] = tmp
-
-            js = json.dumps(result, ensure_ascii=False)
-            return HttpResponse(js, content_type='application/json')
+            return HttpResponse(get_table(
+                sources[key]['fields'], tables[key]
+            ), content_type='application/json')
     return HttpResponseNotFound()
 
 
@@ -69,9 +72,11 @@ def add_value(request, table):
                         cd[key] = str(cd[key])
                 return HttpResponse(json.dumps(cd))
             else:
-                print('invalid')
-                print(form.errors)
-                return HttpResponseServerError()
+                tmp = []
+                for error in form.errors:
+                    tmp.append(error)
+                return HttpResponseServerError(json.dumps(tmp))
+
 
 @csrf_exempt
 @require_http_methods(['POST'])
@@ -106,7 +111,9 @@ def edit_value(request, table):
                     cd1 = form1.cleaned_data
 
                     tables[key].objects.filter(**cd).update(**cd1)
-                    return HttpResponse()
+                    return HttpResponse(get_table(
+                        sources[key]['fields'], tables[key]
+                    ), content_type='application/json')
                 else:
                     return HttpResponse()
                     # print('invalid')
