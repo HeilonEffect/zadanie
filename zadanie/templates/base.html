@@ -101,16 +101,19 @@
 
 					var data = "old=" + JSON.stringify(data['old']) + "&new_val=" + JSON.stringify(data['new_val']);
 					// Тут желателен PUT, но непонятно, как его извлечь в django
-					$http({
-						method: "POST",
-						url: "/put/" + $scope.current_table,
-						data: data,
-						headers: {
-							"Content-Type": "application/x-www-form-urlencoded"
-						}
-					}).success(function (data, status, headers, config) {
-						$scope.content = data;
-					});
+					if ($scope.new_value) {
+						$http({
+							method: "POST",
+							url: "/put/" + $scope.current_table,
+							data: data,
+							headers: {
+								"Content-Type": "application/x-www-form-urlencoded"
+							}
+						}).success(function (data, status, headers, config) {
+							$scope.content = data;
+							$scope.new_value = '';
+						});
+					}
 					$scope.hide_vals = '';
 				}
 				$scope.change_put = function (index, value, elem) {
@@ -130,8 +133,8 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat="row in content['data'] track by $index">
-						<td ng-repeat="column in row" ng-click="edit_cel($index, column, row, this)" style="border: 1px solid black">
+					<tr ng-repeat="row in content['data']">
+						<td ng-repeat="column in row track by $index" ng-click="edit_cel($index, column, row, this)" style="border: 1px solid black">
 							<span ng-if="hide_vals != $id">{[{column}]}</span>
 							<!-- Форма редактирования элементов -->
 							<form ng-if="hide_vals == $id" ng-submit="put_value(this, $index, row)">
