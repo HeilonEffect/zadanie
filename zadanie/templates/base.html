@@ -22,6 +22,8 @@
 				$scope.result = {};
 				
 				$scope.get_table = function (elem) {
+					// при нажатии на ссылку запрашиваем таблицу с названием,
+					// указанном в ссылке
 					$scope.current_table = elem.value;
 					$http.get('/' + elem.value).success(function (data) {
 						$scope.content = data;
@@ -30,10 +32,12 @@
 							return false;
 						});
 					});
+					// при переходе между таблицами обнуляем данные для добавления/редактирования
 					$scope.result = {};
 					$scope.hide_vals = [];
 				}
 				$scope.add_value = function (elem) {
+					// преобразуем данные в формат x-www-form-urlencoded
 					var data = "";
 					for (var key in $scope.result)
 						data += key + "=" + $scope.result[key] + "&";
@@ -47,7 +51,10 @@
 							"Content-Type": "application/x-www-form-urlencoded"
 						}
 					}).success(function (data, status, headers, config) {
-						$scope.content['data'].push($scope.result);
+						var tmp = [];
+						for (var i in $scope.content['columns'])
+							tmp.push(data[$scope.content['columns'][i].id]);
+						$scope.content['data'].push(tmp);
 					});
 				}
 				// фиксирует все изменения в форме добавления элементов
@@ -131,14 +138,16 @@
 					</tr>
 				</tbody>
 			</table>
+			<!-- Форма добавления элемента -->
 			<form ng-submit="add_value(this)" style="border: 1px solid black" ng-show="content">
 				<p ng-repeat="column in content['columns']" ng-model="values">
 					<label>{[{column['title']}]}</label>
-					<input ng-type="{[{column['type']}]}" type="{[{column['type']}]}" ng-model="column.result" ng-change="change_value($index, column)" ng-if="column['type']!='date'">
-				<quick-datepicker ng-model='column.result' disable-timepicker='true' ng-if="column['type']=='date'" ng-change="change_value($index, column)" date-format="MM/dd/yyyy"></quick-datepicker>
-
+					<input ng-type="{[{column['type']}]}" type="{[{column['type']}]}" ng-model="column.result" ng-change="change_value($index, column)" ng-if="column['type']!='date'" required>
+				
+				<quick-datepicker ng-model='column.result' disable-timepicker='true' ng-if="column['type']=='date'" ng-change="change_value($index, column)" date-format="MM/dd/yyyy" required></quick-datepicker>
 				</p>
 				<input type="submit" value="Submit">
+				<!-- yyyy-mm-dd -->
 			</form>
 		</div>
 		<ul style="float:left">

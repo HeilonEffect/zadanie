@@ -63,7 +63,11 @@ def add_value(request, table):
             if form.is_valid():
                 cd = form.cleaned_data
                 tables[key].objects.create(**cd)
-                return HttpResponse()
+                for key in cd:
+                    # если строка начинается с datetime
+                    if (str(cd[key])).find('datetime'):
+                        cd[key] = str(cd[key])
+                return HttpResponse(json.dumps(cd))
             else:
                 print('invalid')
                 print(form.errors)
