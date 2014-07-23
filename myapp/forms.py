@@ -8,6 +8,7 @@ from .models import tables, sources
 myforms = {}
 for item in sources:
     attrs = {}
+    attrs = {'id': forms.IntegerField(required=False)}
     for field in sources[item]['fields']:
         if field['type'] == 'int':
             attrs[field['id']] = forms.IntegerField()

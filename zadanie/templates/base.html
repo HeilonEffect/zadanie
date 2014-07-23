@@ -71,6 +71,7 @@
 				$scope.hide_vals;		// ячейка, которую мы скрываем на время редактирования
 				
 				$scope.edit_cel = function (index, value, row, elem) {
+					// Обрабатывает нажатие на ячейку таблицы
 					$scope.form_type = $scope.content['columns'][index]['type'];
 					for (var i in $scope.content['data']) {
 						var flag = true;
@@ -79,7 +80,7 @@
 								flag = false;
 								break;
 							}
-						if (flag) {
+						if (flag && index != 0) {
 							// Если это нужное нам значение, то отсылаем старое и новое значения
 							$scope.old_row = $scope.content['data'][i];
 							$scope.hide_vals = elem.$id;
@@ -88,6 +89,7 @@
 					}
 				}
 				$scope.put_value = function (elem, index, row) {
+					// происходит при нажатии кнопки <submit>
 					// отправляет новое значение на сервер в формате
 					// {old: row, new_val: {field: val}}
 					var field = $scope.content['columns'][index]['id'];	// имя обновляемого поля
@@ -98,8 +100,10 @@
 					}
 					data["new_val"] = {};
 					data["new_val"][field] = $scope.new_value;
+					console.log(data);
 
 					var data = "old=" + JSON.stringify(data['old']) + "&new_val=" + JSON.stringify(data['new_val']);
+					console.log(data);
 					// Тут желателен PUT, но непонятно, как его извлечь в django
 					if ($scope.new_value) {
 						$http({
@@ -117,7 +121,7 @@
 					$scope.hide_vals = '';
 				}
 				$scope.change_put = function (index, value, elem) {
-					$scope.new_value = elem.column;
+					$scope.new_value = value;
 				}
 			});
 		</script>
@@ -127,6 +131,7 @@
 			<table style="width: 100%;">
 				<thead>
 					<tr>
+						<!-- <td style="border: 1px solid black" ng-if="content">id</td> -->
 						<td ng-repeat="column in content['columns']" style="border: 1px solid black">
 							{[{column['title']}]}
 						</td>
@@ -148,7 +153,7 @@
 			</table>
 			<!-- Форма добавления элемента -->
 			<form ng-submit="add_value(this)" style="border: 1px solid black" ng-show="content">
-				<p ng-repeat="column in content['columns']" ng-model="values">
+				<p ng-repeat="column in content['columns'].slice(1)" ng-model="values">
 					<label>{[{column['title']}]}</label>
 					<input ng-type="{[{column['type']}]}" type="{[{column['type']}]}" ng-model="column.result" ng-change="change_value($index, column)" ng-if="column['type']!='date'" required>
 				

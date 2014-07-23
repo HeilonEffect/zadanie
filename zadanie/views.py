@@ -32,6 +32,8 @@ def get_table(fields, table):
     for column in result['columns']:
         column['type'] = convert[column['type']]
         column['result'] = ''
+    if isinstance(result['columns'][0], dict) and result['columns'][0].get('id') != 'id':
+        result['columns'].insert(0, {'id': 'id', 'type': 'number', 'title': 'id', 'result': ''})
     kwargs = [field['id'] for field in fields]
     result['data'] = list(table.objects.values(*kwargs)) or list()
 
@@ -66,6 +68,7 @@ def add_value(request, table):
             if form.is_valid():
                 cd = form.cleaned_data
                 tables[key].objects.create(**cd)
+                cd['id'] = tables[key].objects.last().id
                 for key in cd:
                     # если строка начинается с datetime
                     if (str(cd[key])).find('datetime'):
@@ -109,6 +112,8 @@ def edit_value(request, table):
                 if form.is_valid() and form1.is_valid():
                     cd = form.cleaned_data
                     cd1 = form1.cleaned_data
+                    print(cd)
+                    print(tables[key].objects.filter(**cd))
 
                     tables[key].objects.filter(**cd).update(**cd1)
                     return HttpResponse(get_table(
@@ -116,7 +121,6 @@ def edit_value(request, table):
                     ), content_type='application/json')
                 else:
                     return HttpResponse()
-                    # print('invalid')
         return HttpResponse()
     except Exception as e:
         print(e)
